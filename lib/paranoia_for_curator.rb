@@ -52,11 +52,9 @@ module ParanoiaForCurator
 end
 
 module Curator
-  module Repository
+  module Model
     def acts_as_paranoid(options = {})
       alias_method :really_delete :delete
-
-      include ParanoiaForCurator
 
       class_attribute :paranoia_column, :paranoia_sentinel_value, :paranoia_sentinel_type
 
@@ -68,32 +66,37 @@ module Curator
         attribute paranoia_column, paranoia_sentinel_type, default: paranoia_sentinel_value
       end
 
-      def self.paranoia_scope
-        find_all{|i| i[paranoia_column] == paranoia_sentinel_value }
+      class << Curator::Repository
+
+        include ParanoiaForCurator
+
+        def self.paranoia_scope
+          find_all{|i| i[paranoia_column] == paranoia_sentinel_value }
+        end
+
+        def self.delete(object)
+          object[paranoia_column] = current_time_from_proper_timezone
+          data_store.save(object)
+          nil
+        end
+
+        def self.paranoid? ; false ; end
+        def paranoid? ; self.class.paranoid? ; end
+
+        def current_time_from_proper_timezone
+          self.class.default_timezone == :utc ? Time.now.utc : Time.now
+        end
+
+        private
+
+        def paranoia_column
+          self.class.paranoia_column
+        end
+
+        def paranoia_sentinel_value
+          self.class.paranoia_sentinel_value
+        end
       end
-
-      def self.delete(object)
-        object[paranoia_column] = current_time_from_proper_timezone
-        data_store.save(object)
-        nil
-      end
-    end
-
-    def self.paranoid? ; false ; end
-    def paranoid? ; self.class.paranoid? ; end
-
-    def current_time_from_proper_timezone
-      self.class.default_timezone == :utc ? Time.now.utc : Time.now
-    end
-
-    private
-
-    def paranoia_column
-      self.class.paranoia_column
-    end
-
-    def paranoia_sentinel_value
-      self.class.paranoia_sentinel_value
     end
   end
 end
