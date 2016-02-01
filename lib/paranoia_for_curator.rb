@@ -3,6 +3,7 @@ require 'curator'
 module ParanoiaForCurator
 
   @@default_sentinel_value = nil
+  @@default_sentinel_type = Time
 
   def self.default_sentinel_value=(val)
     @@default_sentinel_value = val
@@ -10,6 +11,14 @@ module ParanoiaForCurator
 
   def self.default_sentinel_value
     @@default_sentinel_value
+  end
+
+  def self.default_sentinel_type=(val)
+    @@default_sentinel_type = val
+  end
+
+  def self.default_sentinel_type
+    @@default_sentinel_type
   end
 
   def self.included(klazz)
@@ -49,10 +58,15 @@ module Curator
 
       include ParanoiaForCurator
 
-      class_attribute :paranoia_column, :paranoia_sentinel_value
+      class_attribute :paranoia_column, :paranoia_sentinel_value, :paranoia_sentinel_type
 
       self.paranoia_column = (options[:paranoia_column] || :deleted_at).to_s
       self.paranoia_sentinel_value = options.fetch(:sentinel_value) { ParanoiaForCurator.default_sentinel_value }
+      self.paranoia_sentinel_type = options.fetch(:sentinel_type) { ParanoiaForCurator.default_sentinel_type }
+
+      class << self
+        attribute paranoia_column, paranoia_sentinel_type, default: paranoia_sentinel_value
+      end
 
       def self.paranoia_scope
         find_all{|i| i[paranoia_column] == paranoia_sentinel_value }
