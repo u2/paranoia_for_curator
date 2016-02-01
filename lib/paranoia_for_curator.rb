@@ -44,8 +44,8 @@ module ParanoiaForCurator
 
     def _find_by_attribute(attribute, value, options = {})
       results = _find_by_attribute_with_deleted(attribute, value)
-      without_deleted = options.fetch(:without_deleted) { true }
-      results.paranoia_scope if options[:without_deleted]
+      without_deleted = options.fetch(:with_deleted) { false }
+      results.paranoia_scope if options[:with_deleted]
       results
     end
   end
@@ -54,7 +54,7 @@ end
 module Curator
   module Model
     def acts_as_paranoid(options = {})
-      alias_method :really_delete :delete
+      alias_method :really_delete, :delete
 
       class_attribute :paranoia_column, :paranoia_sentinel_value, :paranoia_sentinel_type
 
