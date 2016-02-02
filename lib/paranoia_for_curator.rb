@@ -46,6 +46,7 @@ module ParanoiaForCurator
     def find_by_id(id, options = {})
       result = find_by_id_with_deleted(id)
       without_deleted = options.fetch(:with_deleted) { false }
+      return nil if result.nil?
       result[paranoia_column] == paranoia_sentinel_value && result unless options[:with_deleted]
       result
     end
