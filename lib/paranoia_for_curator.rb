@@ -28,64 +28,65 @@ module ParanoiaForCurator
   module Query
     def paranoid? ; true ; end
 
-    alias_method :all_with_deleted, :all
-
     def all
-      all_with_deleted.paranoia_scope
+      all_with_deleted.find_all{|i| i[paranoia_column] == paranoia_sentinel_value }
     end
 
     def only_deleted
-      find_all{|i| i[paranoia_column] != paranoia_sentinel_value }
+      all_with_deleted.find_all{|i| i[paranoia_column] != paranoia_sentinel_value }
     end
-
-    alias :deleted :only_deleted
-
-    alias_method :_find_by_attribute_with_deleted, :_find_by_attribute
 
     def _find_by_attribute(attribute, value, options = {})
       results = _find_by_attribute_with_deleted(attribute, value)
       without_deleted = options.fetch(:with_deleted) { false }
-      results.paranoia_scope if options[:with_deleted]
+      results.find_all{|i| i[paranoia_column] == paranoia_sentinel_value } unless options[:with_deleted]
       results
+    end
+
+    def find_by_id(id, options = {})
+      result = find_by_id_with_deleted(id)
+      without_deleted = options.fetch(:with_deleted) { false }
+      result[paranoia_column] == paranoia_sentinel_value && result unless options[:with_deleted]
+      result
     end
   end
 end
 
 module Curator
-  module Model
-    def acts_as_paranoid(options = {})
-      alias_method :really_delete, :delete
+  module Repository
 
-      class_attribute :paranoia_column, :paranoia_sentinel_value, :paranoia_sentinel_type
+    def self.included(klazz)
+      klazz.extend ClassMethods
+    end
 
-      self.paranoia_column = (options[:paranoia_column] || :deleted_at).to_s
-      self.paranoia_sentinel_value = options.fetch(:sentinel_value) { ParanoiaForCurator.default_sentinel_value }
-      self.paranoia_sentinel_type = options.fetch(:sentinel_type) { ParanoiaForCurator.default_sentinel_type }
+    module ClassMethods
+      def acts_as_paranoid(options = {})
+        eigenclass = class << self; self; end
 
-      class << self
-        attribute paranoia_column, paranoia_sentinel_type, default: paranoia_sentinel_value
-      end
+        eigenclass.class_eval do
+          alias_method :really_delete, :delete
+          alias_method :all_with_deleted, :all
+          alias_method :_find_by_attribute_with_deleted, :_find_by_attribute
+          alias_method :find_by_id_with_deleted, :find_by_id
+        end
 
-      class << Curator::Repository
+        class_attribute :paranoia_column, :paranoia_sentinel_value, :paranoia_sentinel_type
+
+        self.paranoia_column = (options[:paranoia_column] || :deleted_at).to_s
+        self.paranoia_sentinel_value = options.fetch(:sentinel_value) { ParanoiaForCurator.default_sentinel_value }
+        self.paranoia_sentinel_type = options.fetch(:sentinel_type) { ParanoiaForCurator.default_sentinel_type }
+
 
         include ParanoiaForCurator
 
-        def self.paranoia_scope
-          find_all{|i| i[paranoia_column] == paranoia_sentinel_value }
-        end
-
         def self.delete(object)
-          object[paranoia_column] = current_time_from_proper_timezone
-          data_store.save(object)
+          object[paranoia_column] = Time.now
+          self.save(object)
           nil
         end
 
         def self.paranoid? ; false ; end
         def paranoid? ; self.class.paranoid? ; end
-
-        def current_time_from_proper_timezone
-          self.class.default_timezone == :utc ? Time.now.utc : Time.now
-        end
 
         private
 
@@ -98,5 +99,6 @@ module Curator
         end
       end
     end
+
   end
 end

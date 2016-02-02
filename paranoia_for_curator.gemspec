@@ -12,8 +12,6 @@ Gem::Specification.new do |s|
   s.summary     = "ParanoiaForCurator is a implementation of paranoid for curator."
   s.description = "ParanoiaForCurator is a implementation of paranoid for curator. You would use either plugin / gem if you wished that when you called destroy on a Curator object that it didn't actually destroy it, but just \"hid\" the record. ParanoiaForCurator does this by setting a deleted_at field to the current time when you destroy a record, and hides it by scoping all queries on your model to only include records which do not have a deleted_at field."
 
-  s.add_dependency "curator", "~> 0.11.0"
-
   s.add_development_dependency 'bundler', '~> 1.10.6'
   s.add_development_dependency 'rake', '~> 10.5.0'
   s.add_development_dependency 'rspec', '~> 3.4.0'
