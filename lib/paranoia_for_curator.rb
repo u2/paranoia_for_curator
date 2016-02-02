@@ -88,6 +88,38 @@ module Curator
             object.send("#{paranoia_column}=", nil)
             self.save(object)
           end
+
+          def mixin_fields(field, *mixed_fields)
+            eigenclass = class << self; self; end
+            method_name = "#{field}_#{mixed_fields.join('_')}"
+            joined_fields = mixed_fields.map do |x|
+              "x.#{x} == #{x} "
+            end.join(' && ')
+
+            eigenclass.class_eval do
+              eval <<-METHOD
+                def find_by_#{method_name}(#{field},#{mixed_fields.join(",")}, sort=true, options = {})
+                  return [] if #{field}.nil?
+
+                  if '#{field}'.to_sym == :id
+                    result = find_by_id(#{field}, options)
+                    result = result.nil? ? [] : [result]
+                  else
+                    result = _find_by_attribute('#{field}', #{field}, options)
+                    result.sort! &@sort_with if @sort_with && sort
+                  end
+
+                  result.select do |x|
+                    #{joined_fields}
+                  end
+                end
+
+                def find_first_by_#{method_name}(#{field},#{mixed_fields.join(",")}, sort=true, options = {})
+                  find_by_#{method_name}(#{field},#{mixed_fields.join(",")}, sort, options).first
+                end
+              METHOD
+            end
+          end
         end
 
         class_attribute :paranoia_column, :paranoia_sentinel_value, :paranoia_sentinel_type
