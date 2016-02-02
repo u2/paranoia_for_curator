@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem 'curator', "~> 0.11.0"
+gem 'curator', git: 'https://github.com/baoquan-hq/curator.git', tag: 'bq-0.15.4'
 
 group :development, :test do
   gem 'guard'
