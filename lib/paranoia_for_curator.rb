@@ -20,51 +20,6 @@ module ParanoiaForCurator
   def self.default_sentinel_type
     @@default_sentinel_type
   end
-
-  def self.included(klazz)
-    klazz.extend Query
-  end
-
-  module Query
-    def paranoid? ; true ; end
-
-    def all
-      all_with_deleted.find_all{|i| i.send(paranoia_column) == paranoia_sentinel_value }
-    end
-
-    def only_deleted
-      all_with_deleted.find_all{|i| i.send(paranoia_column) != paranoia_sentinel_value }
-    end
-
-    def _find_by_attribute(attribute, value, options = {})
-      results = _find_by_attribute_with_deleted(attribute, value)
-      without_deleted = options.fetch(:with_deleted) { false }
-      results = results.find_all{|i| i.send(paranoia_column) == paranoia_sentinel_value } unless options[:with_deleted]
-      results
-    end
-
-    def _build_finder_methods(attribute)
-      eigenclass = class << self; self; end
-      eigenclass.class_eval do
-        define_method("find_by_#{attribute}") do |value, options = {}|
-          _find_by_attribute(attribute, value, options)
-        end
-        define_method("find_first_by_#{attribute}") do |value, options = {}|
-          _find_by_attribute(attribute, value, options).first
-        end
-      end
-    end
-
-    def find_by_id(id, options = {})
-      result = find_by_id_with_deleted(id)
-      without_deleted = options.fetch(:with_deleted) { false }
-      return nil if result.nil?
-      unless options[:with_deleted]
-        result = nil unless result.send(paranoia_column) == paranoia_sentinel_value
-      end
-      result
-    end
-  end
 end
 
 module Curator
@@ -83,6 +38,45 @@ module Curator
           alias_method :all_with_deleted, :all
           alias_method :_find_by_attribute_with_deleted, :_find_by_attribute
           alias_method :find_by_id_with_deleted, :find_by_id
+
+          def paranoid? ; true ; end
+
+          def all
+            all_with_deleted.find_all{|i| i.send(paranoia_column) == paranoia_sentinel_value }
+          end
+
+          def only_deleted
+            all_with_deleted.find_all{|i| i.send(paranoia_column) != paranoia_sentinel_value }
+          end
+
+          def _find_by_attribute(attribute, value, options = {})
+            results = _find_by_attribute_with_deleted(attribute, value)
+            without_deleted = options.fetch(:with_deleted) { false }
+            results.select!{|i| i.send(paranoia_column) == paranoia_sentinel_value } unless without_deleted
+            results
+          end
+
+          def _build_finder_methods(attribute)
+            eigenclass = class << self; self; end
+            eigenclass.class_eval do
+              define_method("find_by_#{attribute}") do |value, options = {}|
+                _find_by_attribute(attribute, value, options)
+              end
+              define_method("find_first_by_#{attribute}") do |value, options = {}|
+                _find_by_attribute(attribute, value, options).first
+              end
+            end
+          end
+
+          def find_by_id(id, options = {})
+            result = find_by_id_with_deleted(id)
+            without_deleted = options.fetch(:with_deleted) { false }
+            return nil if result.nil?
+            unless without_deleted
+              result = nil unless result.send(paranoia_column) == paranoia_sentinel_value
+            end
+            result
+          end
         end
 
         class_attribute :paranoia_column, :paranoia_sentinel_value, :paranoia_sentinel_type
