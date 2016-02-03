@@ -8,5 +8,5 @@ group :development, :test do
   gem 'guard'
   gem 'guard-rspec'
   gem 'timecop'
-  gem 'pry'
+  gem 'byebug'
 end

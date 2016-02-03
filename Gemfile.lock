@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    paranoia_for_curator (0.0.4)
+    paranoia_for_curator (0.0.5)
 
 GEM
   remote: https://rubygems.org/
@@ -17,7 +17,10 @@ GEM
       tzinfo (~> 1.1)
     beefcake (1.0.0)
     builder (3.2.2)
+    byebug (5.0.0)
+      columnize (= 0.9.0)
     coderay (1.1.0)
+    columnize (0.9.0)
     curator (0.11.2)
       activemodel (>= 3.0.0)
       activesupport (>= 3.0.0)
@@ -94,11 +97,11 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.10.6)
+  byebug
   curator (~> 0.11.0)
   guard
   guard-rspec
   paranoia_for_curator!
-  pry
   rake (~> 10.5.0)
   rspec (~> 3.4.0)
   timecop

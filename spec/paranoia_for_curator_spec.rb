@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'pry'
+require 'byebug'
 
 describe ParanoiaForCurator do
   context "with riak" do
@@ -53,7 +53,7 @@ describe ParanoiaForCurator do
     context "find_first_by_index" do
       it "find first by index" do
         expect(TestModelRepository.find_first_by_some_field("Some Value 1")).to eq nil
-        expect(TestModelRepository.find_first_by_some_field("Some Value 1", with_deleted: true)).to eq @model1
+        expect(TestModelRepository.find_first_by_some_field("Some Value 1", with_deleted: true).some_field).to eq 'Some Value 1'
       end
     end
 
@@ -66,8 +66,7 @@ describe ParanoiaForCurator do
     describe "find_by_id" do
       it "find by id" do
         expect(TestModelRepository.find_by_id(@model1.id)).to eq nil
-        expect(TestModelRepository.find_by_id(@model1.id, with_deleted: true)).to eq @model1
-        expect(TestModelRepository.find_by_id(@model2.id)).to eq @model2
+        expect(TestModelRepository.find_by_id(@model1.id, with_deleted: true).some_field).to eq 'Some Value 1'
       end
     end
   end
