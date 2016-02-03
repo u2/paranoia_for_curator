@@ -29,18 +29,30 @@ module ParanoiaForCurator
     def paranoid? ; true ; end
 
     def all
-      all_with_deleted.find_all{|i| i[paranoia_column] == paranoia_sentinel_value }
+      all_with_deleted.find_all{|i| i.send(paranoia_column) == paranoia_sentinel_value }
     end
 
     def only_deleted
-      all_with_deleted.find_all{|i| i[paranoia_column] != paranoia_sentinel_value }
+      all_with_deleted.find_all{|i| i.send(paranoia_column) != paranoia_sentinel_value }
     end
 
     def _find_by_attribute(attribute, value, options = {})
       results = _find_by_attribute_with_deleted(attribute, value)
       without_deleted = options.fetch(:with_deleted) { false }
-      results.find_all{|i| i[paranoia_column] == paranoia_sentinel_value } unless options[:with_deleted]
+      results = results.find_all{|i| i.send(paranoia_column) == paranoia_sentinel_value } unless options[:with_deleted]
       results
+    end
+
+    def _build_finder_methods(attribute)
+      eigenclass = class << self; self; end
+      eigenclass.class_eval do
+        define_method("find_by_#{attribute}") do |value, options = {}|
+          _find_by_attribute(attribute, value, options)
+        end
+        define_method("find_first_by_#{attribute}") do |value, options = {}|
+          _find_by_attribute(attribute, value, options).first
+        end
+      end
     end
 
     def find_by_id(id, options = {})
@@ -48,7 +60,7 @@ module ParanoiaForCurator
       without_deleted = options.fetch(:with_deleted) { false }
       return nil if result.nil?
       unless options[:with_deleted]
-        result = nil unless result[paranoia_column] == paranoia_sentinel_value
+        result = nil unless result.send(paranoia_column) == paranoia_sentinel_value
       end
       result
     end
@@ -79,11 +91,10 @@ module Curator
         self.paranoia_sentinel_value = options.fetch(:sentinel_value) { ParanoiaForCurator.default_sentinel_value }
         self.paranoia_sentinel_type = options.fetch(:sentinel_type) { ParanoiaForCurator.default_sentinel_type }
 
-
         include ParanoiaForCurator
 
         def self.delete(object)
-          object[paranoia_column] = Time.now
+          object.send("#{paranoia_column}=", Time.now)
           self.save(object)
           nil
         end
