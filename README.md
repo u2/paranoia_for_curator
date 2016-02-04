@@ -13,7 +13,7 @@ If you wish to actually destroy an object you may call `really_delete`.
 Firstly:
 
 ``` ruby
-gem "paranoia_for_curator", "~> 0.0.3"
+gem "paranoia_for_curator", "~> 0.0.6"
 ```
 
 Then run:
@@ -94,14 +94,6 @@ If you want to find only the deleted records:
 
 ``` ruby
 Client.only_deleted
-```
-
-If you want to check if a record is soft-deleted:
-
-``` ruby
-client.paranoia_deleted?
-# or
-client.deleted?
 ```
 
 If you want to restore a record:
