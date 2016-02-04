@@ -69,5 +69,31 @@ describe ParanoiaForCurator do
         expect(TestModelRepository.find_by_id(@model1.id, with_deleted: true).some_field).to eq 'Some Value 1'
       end
     end
+
+    describe "delete" do
+      it "act as soft delete" do
+        model1 = TestModelRepository.find_by_id(@model1.id, with_deleted: true)
+        expect(model1.deleted_at).to_not be_nil
+      end
+    end
+
+    describe "really_delete" do
+      it "act as really delete" do
+        TestModelRepository.really_delete(@model2)
+        model2 = TestModelRepository.find_by_id(@model2.id, with_deleted: true)
+        expect(model2).to be_nil
+      end
+    end
+
+    describe "restore" do
+      it "restore" do
+        model1 = TestModelRepository.find_by_id(@model1.id, with_deleted: true)
+        expect(model1.deleted_at).to_not be_nil
+
+        TestModelRepository.restore(model1)
+        model = TestModelRepository.find_by_id(model1.id)
+        expect(model.deleted_at).to be_nil
+      end
+    end
   end
 end

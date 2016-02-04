@@ -77,6 +77,17 @@ module Curator
             end
             result
           end
+
+          def delete(object)
+            object.send("#{paranoia_column}=", Time.now)
+            self.save(object)
+            nil
+          end
+
+          def restore(object)
+            object.send("#{paranoia_column}=", nil)
+            self.save(object)
+          end
         end
 
         class_attribute :paranoia_column, :paranoia_sentinel_value, :paranoia_sentinel_type
@@ -86,12 +97,6 @@ module Curator
         self.paranoia_sentinel_type = options.fetch(:sentinel_type) { ParanoiaForCurator.default_sentinel_type }
 
         include ParanoiaForCurator
-
-        def self.delete(object)
-          object.send("#{paranoia_column}=", Time.now)
-          self.save(object)
-          nil
-        end
 
         def self.paranoid? ; false ; end
         def paranoid? ; self.class.paranoid? ; end

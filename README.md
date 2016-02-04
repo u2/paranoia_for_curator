@@ -8,6 +8,8 @@ If you wish to actually destroy an object you may call `really_delete`.
 
 ## Installation & Usage
 
+### Installation
+
 Firstly:
 
 ``` ruby
@@ -105,13 +107,7 @@ client.deleted?
 If you want to restore a record:
 
 ``` ruby
-ClientRepository.restore(id)
-```
-
-If you want to restore a whole bunch of records:
-
-``` ruby
-ClientRepository.restore([id1, id2, ..., idN])
+ClientRepository.restore(client)
 ```
 
 For more information, please look at the tests.
