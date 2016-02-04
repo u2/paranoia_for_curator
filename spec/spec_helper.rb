@@ -15,6 +15,14 @@ RSpec.configure do |config|
     Curator.repositories = Set.new
   end
 
+  config.before(:suite) do
+    Curator.data_store.remove_all_keys
+  end
+
+  config.after(:each) do
+    Curator.data_store.reset!
+  end
+
   config.around(:each) do |test|
     @transient_classes = []
     test.call

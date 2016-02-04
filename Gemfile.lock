@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    paranoia_for_curator (0.0.5)
+    paranoia_for_curator (0.0.6)
 
 GEM
   remote: https://rubygems.org/
