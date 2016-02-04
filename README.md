@@ -72,6 +72,7 @@ If you want to use a column other than `deleted_at`, you can pass it as an optio
 ``` ruby
 class Client
   include Curator::Model
+  attribute :name
   attribute :destroyed_at, Time, default: nil
   # ...
 end
@@ -79,7 +80,7 @@ end
 class ClientRepository
   include Curator::Repository
   acts_as_paranoid column: :destroyed_at
-
+  indexed_fields :name
   ...
 end
 ```
@@ -100,6 +101,18 @@ If you want to restore a record:
 
 ``` ruby
 ClientRepository.restore(client)
+```
+
+The `find_by_id` and `find_by_index` query only can query the records which do not have a `deleted_at` field.
+If you want to query by id including the paranoia-deleted records:
+
+```ruby
+ClientRepository.find_by_id(id, with_deleted: true)
+```
+
+If you want to query by index including the paranoia-deleted records:
+```ruby
+ClientRepository.find_by_name(name, with_deleted: true)
 ```
 
 For more information, please look at the tests.
